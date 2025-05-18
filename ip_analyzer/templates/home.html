@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Strona główna{% endblock %}
+
+{% block content %}
+    <div class="text-center">
+        <h2 class="mb-4">Witaj, {{ request.user.username }}!</h2>
+        <p>Witaj w panelu analizy adresów IP. Wybierz jedną z opcji z menu powyżej, aby rozpocząć.</p>
+        <b>Ważne informacje:</b>
+    </div>
+    <ol>
+            <li>Aplikacja Webowa została stworzona w ramach kursu projektu <b>Moniotorowanie i Detekcja Zagrożeń</b> </li>
+            <li>Autorami aplikacji są: <b>Monika Śliwowska</b> oraz <b>Jakub Zawadzki</b></li>
+            <li>Aplikacja pozwala na wgrywanie maksymalnie 1000 adresów IP dziennie przez ograniczenie API AbuseIP.</li>
+            <li>Aplikacja pozwala na przegląd wszystkich zarejestrowanych adresów IP oraz przedstawia wykres największej ilości złośliwych adresów po danym kraju</li>
+            <li>Determinowanie Botnetów jest obliczane na podstawie podobieństw: ISP, typu użytkowania adresu oraz okresu zgłoszenia (tolerancja 1 dnia)</li>
+        </ol>
+{% endblock %}

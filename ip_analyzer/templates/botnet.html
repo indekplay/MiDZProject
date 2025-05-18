@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Botnety{% endblock %}
+
+{% block content %}
+    <h2>🤖 Podejrzane grupy botnetów</h2>
+
+    {% if botnets %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Typ użycia</th>
+                    <th>ISP</th>
+                    <th>Przybliżona data zgłoszenia</th>
+                    <th>Liczba IP</th>
+                    <th>Adresy IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bot in botnets %}
+                    <tr>
+                        <td>{{ bot.usage }}</td>
+                        <td>{{ bot.isp }}</td>
+                        <td>{{ bot.report_date }}</td>
+                        <td>{{ bot.ip_count }}</td>
+                        <td>
+                            <ul>
+                                {% for ip in bot.ips %}
+                                    <li>{{ ip.ip_address }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Brak wykrytych grup botnetów.</p>
+    {% endif %}
+{% endblock %}

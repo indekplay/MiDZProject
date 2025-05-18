@@ -1,0 +1,16 @@
+<!-- core/templates/upload.html -->
+{% extends "base.html" %}
+
+{% block title %}Upload IP{% endblock %}
+
+{% block content %}
+    <h2>📤 Wgraj plik z adresami IP (.txt)</h2>
+    <form method="post" enctype="multipart/form-data" action="{% url 'upload' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="ip_file" class="form-label">Wybierz plik .txt:</label>
+            <input type="file" name="ip_file" class="form-control" id="ip_file" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Prześlij</button>
+    </form>
+{% endblock %}

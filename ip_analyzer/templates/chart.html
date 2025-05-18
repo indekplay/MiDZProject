@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Wykres Krajów{% endblock %}
+
+{% block content %}
+    <h2>📊 Kraj pochodzenia adresów IP</h2>
+    <canvas id="countryChart" width="400" height="200"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const rawLabels = {{ labels|safe }};
+        const counts = {{ counts|safe }};
+
+        function countryCodeToFlagEmoji(code) {
+            if (!code || code.length !== 2) return code;
+            return code.toUpperCase().replace(/./g, char =>
+                String.fromCodePoint(127397 + char.charCodeAt())
+            );
+        }
+
+        const labelsWithFlags = rawLabels.map(code => {
+            try {
+                return countryCodeToFlagEmoji(code);
+            } catch (e) {
+                return code; // Jeśli coś pójdzie nie tak, pokazujemy sam kod
+            }
+        });
+
+        const ctx = document.getElementById('countryChart').getContext('2d');
+        const countryChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labelsWithFlags,
+                datasets: [{
+                    label: 'Liczba złośliwych IP',
+                    data: counts,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Liczba IP'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Kraj (flaga)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}
