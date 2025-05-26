@@ -5,28 +5,40 @@
 {% block content %}
     <h2>📋 Lista przeanalizowanych adresów IP</h2>
 
+    <form method="get" action="{% url 'ip_list' %}" class="mb-3" style="max-width: 300px;">
+        <label for="attack" class="form-label">Wybierz atak:</label>
+        <select name="attack" id="attack" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Wszystkie ataki --</option>
+            {% for label in attack_labels %}
+                <option value="{{ label }}" {% if label == selected_attack %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
     {% if ips %}
-        <table class="table table-striped table-bordered">
+        <table class="table table-striped table-bordered table-hover">
             <thead class="table-dark">
                 <tr>
                     <th>Adres IP</th>
+                    <th>ASN</th>
+                    <th>AS Name</th>
+                    <th>AS Domain</th>
                     <th>Kraj</th>
-                    <th>Wskaźnik zagrożenia</th>
-                    <th>ISP</th>
-                    <th>Hostnames</th>
-                    <th>Usage</th>
+                    <th>Kontynent</th>
+                    <th>Atak</th>
                     <th>Ostatni raport</th>
                 </tr>
             </thead>
             <tbody>
                 {% for ip in ips %}
-                    <tr class="table-danger">
+                    <tr>
                         <td>{{ ip.ip_address }}</td>
+                        <td>{{ ip.asn }}</td>
+                        <td>{{ ip.as_name }}</td>
+                        <td>{{ ip.as_domain }}</td>
                         <td>{{ ip.country_code }}</td>
-                        <td>{{ ip.abuse_confidence_score }}</td>
-                        <td>{{ ip.isp }}</td>
-                        <td>{{ ip.hostnames }}</td>
-                        <td>{{ ip.usage_type }}</td>
+                        <td>{{ ip.continent }}</td>
+                        <td>{{ ip.attack_label }}</td>
                         <td>{{ ip.last_reported_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                 {% endfor %}

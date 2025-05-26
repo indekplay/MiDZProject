@@ -3,38 +3,50 @@
 {% block title %}Botnety{% endblock %}
 
 {% block content %}
-    <h2>🤖 Podejrzane grupy botnetów</h2>
+  <h2>🤖 Analiza botnetów</h2>
 
-    {% if botnets %}
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Typ użycia</th>
-                    <th>ISP</th>
-                    <th>Przybliżona data zgłoszenia</th>
-                    <th>Liczba IP</th>
-                    <th>Adresy IP</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for bot in botnets %}
-                    <tr>
-                        <td>{{ bot.usage }}</td>
-                        <td>{{ bot.isp }}</td>
-                        <td>{{ bot.report_date }}</td>
-                        <td>{{ bot.ip_count }}</td>
-                        <td>
-                            <ul>
-                                {% for ip in bot.ips %}
-                                    <li>{{ ip.ip_address }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
+  <form method="get" class="mb-4" style="max-width: 300px;">
+    <label for="attackSelect" class="form-label">Wybierz atak:</label>
+    <select id="attackSelect" name="attack" class="form-select" onchange="this.form.submit()">
+      <option value="">— Wszystkie ataki —</option>
+      {% for label in attack_labels %}
+        <option value="{{ label }}" {% if label == selected_attack %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+
+  {% if botnets %}
+    <table class="table table-striped table-bordered table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>ASN</th>
+          <th>Kraj</th>
+          <th>Liczba IP</th>
+          <th>Adresy IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for group in botnets %}
+          <tr>
+            <td>{{ group.asn }}</td>
+            <td>{{ group.country }}</td>
+            <td>{{ group.count }}</td>
+            <td>
+              <ul class="mb-0">
+                {% for ip in group.ips %}
+                  <li>{{ ip.ip_address }}</li>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Brak wykrytych grup botnetów.</p>
-    {% endif %}
+              </ul>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-info">
+      Brak wykrytych potencjalnych botnetów{% if selected_attack %} dla ataku "{{ selected_attack }}"{% endif %}.
+    </div>
+  {% endif %}
 {% endblock %}

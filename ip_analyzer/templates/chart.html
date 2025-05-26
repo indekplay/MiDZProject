@@ -4,6 +4,19 @@
 
 {% block content %}
     <h2>📊 Kraj pochodzenia adresów IP</h2>
+
+    <form method="get" class="mb-3">
+        <label for="attackSelect" class="form-label">Wybierz atak:</label>
+        <select name="attack" id="attackSelect" class="form-select" onchange="this.form.submit()">
+            <option value="">Wszystkie ataki</option>
+            {% for attack in attack_labels %}
+                <option value="{{ attack }}" {% if attack == selected_attack %}selected{% endif %}>
+                    {{ attack }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
     <canvas id="countryChart" width="400" height="200"></canvas>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,7 +35,7 @@
             try {
                 return countryCodeToFlagEmoji(code);
             } catch (e) {
-                return code; // Jeśli coś pójdzie nie tak, pokazujemy sam kod
+                return code;
             }
         });
 

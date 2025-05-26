@@ -65,7 +65,7 @@ WSGI_APPLICATION = 'ip_analyzer.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ipki',
+        'NAME': 'ipki2',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
@@ -119,5 +119,3 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'
-
-ABUSEIPDB_API_KEY = '06a0110153e5c798d62246e0d7351fd2203f31b5f3fe976acdb50c9f7e5a5045dbd51a6a53abb4a2'

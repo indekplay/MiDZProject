@@ -4,29 +4,57 @@ import requests
 from django.contrib import messages
 from .forms import UploadFileForm
 from .models import IPAddress
-from django.conf import settings
 from django.db.models import Count
-import io
 from collections import defaultdict
-from datetime import datetime, timedelta
-API_KEY = settings.ABUSEIPDB_API_KEY
+
 @login_required
 def home(request):
     return render(request, 'home.html')
 
+
 @login_required
 def ip_list(request):
-    ips = IPAddress.objects.all().order_by('-abuse_confidence_score')
-    return render(request, 'ip_list.html', {'ips': ips})
+    attack_label = request.GET.get('attack', None)
+
+    if attack_label:
+        ips = IPAddress.objects.filter(attack_label=attack_label).order_by('-created_at')
+    else:
+        ips = IPAddress.objects.all().order_by('-created_at')
+
+    attack_labels = (
+        IPAddress.objects
+        .exclude(attack_label__isnull=True)
+        .exclude(attack_label__exact='')
+        .values_list('attack_label', flat=True)
+        .distinct()
+        .order_by('attack_label')
+    )
+
+    return render(request, 'ip_list.html', {
+        'ips': ips,
+        'attack_labels': attack_labels,
+        'selected_attack': attack_label,
+    })
+
+
 
 @login_required
 def chart(request):
+    selected_attack = request.GET.get('attack')
+
+    if selected_attack:
+        filtered_ips = IPAddress.objects.filter(attack_label=selected_attack)
+    else:
+        filtered_ips = IPAddress.objects.all()
+
     country_data = (
-        IPAddress.objects
+        filtered_ips
         .values('country_code')
         .annotate(count=Count('id'))
         .order_by('-count')
     )
+
+    attack_labels = IPAddress.objects.values_list('attack_label', flat=True).distinct()
 
     labels = [entry['country_code'] or 'Nieznany' for entry in country_data]
     counts = [entry['count'] for entry in country_data]
@@ -34,47 +62,58 @@ def chart(request):
     return render(request, 'chart.html', {
         'labels': labels,
         'counts': counts,
+        'attack_labels': attack_labels,
+        'selected_attack': selected_attack,
     })
+
 
 @login_required
 def botnet(request):
-    ip_records = IPAddress.objects.all()
+    selected_attack = request.GET.get('attack', None)
+
+    if selected_attack:
+        ip_records = IPAddress.objects.filter(attack_label=selected_attack)
+    else:
+        ip_records = IPAddress.objects.all()
+
+    attack_labels = (
+        IPAddress.objects
+        .exclude(attack_label__isnull=True)
+        .exclude(attack_label__exact='')
+        .values_list('attack_label', flat=True)
+        .distinct()
+        .order_by('attack_label')
+    )
+
     groups = defaultdict(list)
     for ip in ip_records:
-        if not ip.usage_type or not ip.isp or not ip.last_reported_at:
-            continue
-        usage = ip.usage_type.strip()
-        isp = ip.isp.strip()
-        reported_date = ip.last_reported_at.date()
-        matched_key = None
-        for key in groups:
-            if key[0] == usage and key[1] == isp:
-                existing_date = key[2]
-                if abs((reported_date - existing_date).days) <= 1:
-                    matched_key = key
-                    break
-        if matched_key:
-            groups[matched_key].append(ip)
-        else:
-            groups[(usage, isp, reported_date)].append(ip)
-    grouped_botnets = [
-        {
-            'usage': key[0],
-            'isp': key[1],
-            'report_date': key[2],
-            'ips': value,
-            'ip_count': len(value)
-        }
-        for key, value in groups.items()
-        if len(value) >= 3
-    ]
-    grouped_botnets.sort(key=lambda g: g['ip_count'], reverse=True)
-    return render(request, 'botnet.html', {'botnets': grouped_botnets})
+        key = (ip.asn, ip.country_code)
+        groups[key].append(ip)
+
+    grouped = []
+    for (asn, country), ips in groups.items():
+        if len(ips) >= 10:
+            grouped.append({
+                'asn': asn or '–',
+                'country': country or 'Nieznany',
+                'count': len(ips),
+                'ips': ips,
+            })
+
+    grouped.sort(key=lambda g: g['count'], reverse=True)
+
+    return render(request, 'botnet.html', {
+        'botnets': grouped,
+        'attack_labels': attack_labels,
+        'selected_attack': selected_attack,
+    })
+
 
 def handle_uploaded_file(f):
     content = f.read().decode('utf-8')
     ip_list = content.splitlines()
     return [ip.strip() for ip in ip_list if ip.strip()]
+
 
 @login_required
 def upload_file(request):
@@ -82,48 +121,40 @@ def upload_file(request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             ip_addresses = handle_uploaded_file(request.FILES['ip_file'])
+            attack_label = form.cleaned_data['attack_label']
             total = len(ip_addresses)
             processed = 0
             errors = 0
+            IPINFO_TOKEN = '5294d8ba5efbff'
 
             for ip in ip_addresses:
                 try:
-                    response = requests.get(
-                        'https://api.abuseipdb.com/api/v2/check',
-                        params={'ipAddress': ip, 'maxAgeInDays': 90},
-                        headers={
-                            'Key': API_KEY,
-                            'Accept': 'application/json'
+                    response = requests.get(f"https://api.ipinfo.io/lite/{ip}?token={IPINFO_TOKEN}")
+                    if response.status_code != 200:
+                        raise Exception(f"Błąd API: {response.status_code}")
+                    data = response.json()
+
+                    IPAddress.objects.get_or_create(
+                        ip_address=ip,
+                        defaults={
+                            'asn': data.get('asn'),
+                            'as_name': data.get('as_name'),
+                            'as_domain': data.get('as_domain'),
+                            'country_code': data.get('country_code'),
+                            'country': data.get('country'),
+                            'continent_code': data.get('continent_code'),
+                            'continent': data.get('continent'),
+                            'attack_label': attack_label,
                         }
                     )
-                    data = response.json().get('data', {})
-                    score = data['abuseConfidenceScore']
-                    if score > 0:
-                        obj, created = IPAddress.objects.get_or_create(
-                            ip_address=ip,
-                            defaults={
-                                'is_malicious': True,
-                                'abuse_confidence_score': score,
-                                'country_code': data.get('countryCode'),
-                                'isp': data.get('isp'),
-                                'domain': data.get('domain'),
-                                'hostnames': ', '.join(data.get('hostnames', [])),
-                                'usage_type': data.get('usageType'),
-                                'total_reports': data.get('totalReports'),
-                                'distinct_users': data.get('numDistinctUsers'),
-                                'last_reported_at': data.get('lastReportedAt')
-                            }
-                        )
-                        if created:
-                            processed += 1
-                    else:
-                        continue
+                    processed += 1
                 except Exception as e:
                     errors += 1
                     messages.warning(request, f'Błąd przy IP {ip}: {str(e)}')
 
             messages.success(request, f'Przetworzono {processed} z {total} adresów IP. Błędy: {errors}')
-            return redirect('upload')  # zostajesz na stronie upload
+            return redirect('upload')
     else:
         form = UploadFileForm()
+
     return render(request, 'upload.html', {'form': form})

@@ -1,4 +1,3 @@
-<!-- core/templates/upload.html -->
 {% extends "base.html" %}
 
 {% block title %}Upload IP{% endblock %}
@@ -9,7 +8,11 @@
         {% csrf_token %}
         <div class="mb-3">
             <label for="ip_file" class="form-label">Wybierz plik .txt:</label>
-            <input type="file" name="ip_file" class="form-control" id="ip_file" required>
+            {{ form.ip_file }}
+        </div>
+        <div class="mb-3">
+            <label for="attack_label" class="form-label">Nazwa ataku:</label>
+            {{ form.attack_label }}
         </div>
         <button type="submit" class="btn btn-primary">Prześlij</button>
     </form>
