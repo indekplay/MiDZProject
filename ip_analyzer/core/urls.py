@@ -7,4 +7,5 @@ urlpatterns = [
     path('ip-list/', views.ip_list, name='ip_list'),
     path('chart/', views.chart, name='chart'),
     path('botnet/', views.botnet, name='botnet'),
+    path('analiza/', views.analiza, name='analiza'),
 ]

@@ -3,7 +3,7 @@
 {% block title %}Upload IP{% endblock %}
 
 {% block content %}
-    <h2>📤 Wgraj plik z adresami IP (.txt)</h2>
+    <h2>Wgraj plik z adresami IP (.txt)</h2>
     <form method="post" enctype="multipart/form-data" action="{% url 'upload' %}">
         {% csrf_token %}
         <div class="mb-3">

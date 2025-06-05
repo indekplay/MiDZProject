@@ -3,18 +3,30 @@
 {% block title %}Botnety{% endblock %}
 
 {% block content %}
-  <h2>🤖 Analiza botnetów</h2>
+  <h2>Analiza botnetów</h2>
 
-  <form method="get" class="mb-4" style="max-width: 300px;">
-    <label for="attackSelect" class="form-label">Wybierz atak:</label>
-    <select id="attackSelect" name="attack" class="form-select" onchange="this.form.submit()">
-      <option value="">— Wszystkie ataki —</option>
-      {% for label in attack_labels %}
-        <option value="{{ label }}" {% if label == selected_attack %}selected{% endif %}>
-          {{ label }}
-        </option>
-      {% endfor %}
-    </select>
+  <form method="get" class="mb-4 row" style="max-width: 600px;">
+    <div class="col-md-6">
+      <label for="attackSelect" class="form-label">Wybierz atak:</label>
+      <select id="attackSelect" name="attack" class="form-select" onchange="this.form.submit()">
+        <option value="">— Wszystkie ataki —</option>
+        {% for label in attack_labels %}
+          <option value="{{ label }}" {% if label == selected_attack %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label for="prefixLengthSelect" class="form-label">Długość prefixu IP:</label>
+      <select id="prefixLengthSelect" name="prefix_length" class="form-select" onchange="this.form.submit()">
+        {% for length in prefix_lengths %}
+          <option value="{{ length }}" {% if length == prefix_length %}selected{% endif %}>
+  {{ length }} oktet{% if length == 1 %}{% else %}y{% endif %}
+</option>
+        {% endfor %}
+      </select>
+    </div>
   </form>
 
   {% if botnets %}
@@ -23,8 +35,8 @@
         <tr>
           <th>ASN</th>
           <th>Kraj</th>
+          <th>Prefix IP</th>
           <th>Liczba IP</th>
-          <th>Adresy IP</th>
         </tr>
       </thead>
       <tbody>
@@ -32,14 +44,8 @@
           <tr>
             <td>{{ group.asn }}</td>
             <td>{{ group.country }}</td>
+            <td>{{ group.ip_prefix }}</td>
             <td>{{ group.count }}</td>
-            <td>
-              <ul class="mb-0">
-                {% for ip in group.ips %}
-                  <li>{{ ip.ip_address }}</li>
-                {% endfor %}
-              </ul>
-            </td>
           </tr>
         {% endfor %}
       </tbody>

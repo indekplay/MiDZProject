@@ -3,48 +3,92 @@
 {% block title %}Lista IP{% endblock %}
 
 {% block content %}
-    <h2>📋 Lista przeanalizowanych adresów IP</h2>
+<h2>Lista przeanalizowanych adresów IP</h2>
 
-    <form method="get" action="{% url 'ip_list' %}" class="mb-3" style="max-width: 300px;">
-        <label for="attack" class="form-label">Wybierz atak:</label>
-        <select name="attack" id="attack" class="form-select" onchange="this.form.submit()">
-            <option value="">-- Wszystkie ataki --</option>
-            {% for label in attack_labels %}
-                <option value="{{ label }}" {% if label == selected_attack %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-    </form>
+<form method="get" action="{% url 'ip_list' %}" class="mb-3" style="max-width: 300px;">
+    <label for="attack" class="form-label">Wybierz atak:</label>
+    <select name="attack" id="attack" class="form-select" onchange="this.form.submit()">
+        <option value="">-- Wszystkie ataki --</option>
+        {% for label in attack_labels %}
+            <option value="{{ label }}" {% if label == selected_attack %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+</form>
 
-    {% if ips %}
-        <table class="table table-striped table-bordered table-hover">
-            <thead class="table-dark">
+{% if ips %}
+    <p>
+        Wyświetlanie {{ ips.start_index }}–{{ ips.end_index }} z {{ ips.paginator.count }} adresów IP
+    </p>
+
+    <table class="table table-striped table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Adres IP</th>
+                <th>ASN</th>
+                <th>AS Name</th>
+                <th>AS Domain</th>
+                <th>Kraj</th>
+                <th>Kontynent</th>
+                <th>Atak</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ip in ips %}
                 <tr>
-                    <th>Adres IP</th>
-                    <th>ASN</th>
-                    <th>AS Name</th>
-                    <th>AS Domain</th>
-                    <th>Kraj</th>
-                    <th>Kontynent</th>
-                    <th>Atak</th>
-                    <th>Ostatni raport</th>
+                    <td>{{ ip.ip_address }}</td>
+                    <td>{{ ip.asn }}</td>
+                    <td>{{ ip.as_name }}</td>
+                    <td>{{ ip.as_domain }}</td>
+                    <td>{{ ip.country_code }}</td>
+                    <td>{{ ip.continent }}</td>
+                    <td>{{ ip.attack_label }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for ip in ips %}
-                    <tr>
-                        <td>{{ ip.ip_address }}</td>
-                        <td>{{ ip.asn }}</td>
-                        <td>{{ ip.as_name }}</td>
-                        <td>{{ ip.as_domain }}</td>
-                        <td>{{ ip.country_code }}</td>
-                        <td>{{ ip.continent }}</td>
-                        <td>{{ ip.attack_label }}</td>
-                        <td>{{ ip.last_reported_at|date:"Y-m-d H:i" }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <div class="alert alert-info">Brak zaimportowanych adresów IP.</div>
-    {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav aria-label="Stronicowanie">
+        <ul class="pagination justify-content-center flex-wrap">
+            {% if ips.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_attack %}attack={{ selected_attack }}&{% endif %}page={{ ips.previous_page_number }}">« Poprzednia</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">« Poprzednia</span></li>
+            {% endif %}
+
+            {% if page_range.start > 1 %}
+                <li class="page-item"><a class="page-link" href="?{% if selected_attack %}attack={{ selected_attack }}&{% endif %}page=1">1</a></li>
+                {% if page_range.start > 2 %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endif %}
+
+            {% for num in page_range %}
+                <li class="page-item {% if ips.number == num %}active{% endif %}">
+                    <a class="page-link" href="?{% if selected_attack %}attack={{ selected_attack }}&{% endif %}page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+
+            {% if page_range.stop|add:'-1' < total_pages %}
+                {% if page_range.stop < total_pages %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_attack %}attack={{ selected_attack }}&{% endif %}page={{ total_pages }}">{{ total_pages }}</a>
+                </li>
+            {% endif %}
+
+            {% if ips.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_attack %}attack={{ selected_attack }}&{% endif %}page={{ ips.next_page_number }}">Następna »</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Następna »</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+{% else %}
+    <div class="alert alert-info">Brak zaimportowanych adresów IP.</div>
+{% endif %}
 {% endblock %}

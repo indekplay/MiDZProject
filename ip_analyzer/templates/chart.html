@@ -3,7 +3,7 @@
 {% block title %}Wykres Krajów{% endblock %}
 
 {% block content %}
-    <h2>📊 Kraj pochodzenia adresów IP</h2>
+    <h2>Kraj pochodzenia adresów IP</h2>
 
     <form method="get" class="mb-3">
         <label for="attackSelect" class="form-label">Wybierz atak:</label>
@@ -45,7 +45,7 @@
             data: {
                 labels: labelsWithFlags,
                 datasets: [{
-                    label: 'Liczba złośliwych IP',
+                    label: 'Liczba IP',
                     data: counts,
                     backgroundColor: 'rgba(54, 162, 235, 0.5)',
                     borderColor: 'rgba(54, 162, 235, 1)',

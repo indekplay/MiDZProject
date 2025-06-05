@@ -1,10 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Analiza wspólnych IP{% endblock %}
+
+{% block content %}
+    <h2>🔍 Analiza wspólnych adresów IP</h2>
+
+    <form method="post" class="form-inline mb-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Analizuj</button>
+
+        {% if common_ips %}
+            <button type="submit" name="export" value="true" class="btn btn-success ms-2">
+                Eksportuj IP do pliku TXT
+            </button>
+        {% endif %}
+    </form>
+
+    {% if selected_attack_1 and selected_attack_2 %}
+        <h4>Wspólne IP dla ataków: <strong>{{ selected_attack_1 }}</strong> i <strong>{{ selected_attack_2 }}</strong></h4>
+        {% if common_ips %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Adres IP</th>
+                        <th>ASN</th>
+                        <th>AS Name</th>
+                        <th>Kraj</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ip in common_ips %}
+                        <tr>
+                            <td>{{ ip.ip_address }}</td>
+                            <td>{{ ip.asn }}</td>
+                            <td>{{ ip.as_name }}</td>
+                            <td>{{ ip.country }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Brak wspólnych adresów IP.</p>
+        {% endif %}
+    {% endif %}
+{% endblock %}
